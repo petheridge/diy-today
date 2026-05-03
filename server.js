@@ -45,17 +45,22 @@ db.exec(`
   );
 `);
 
-// Column additions — silent-fail if column already exists
+// Column additions — silent-fail if column already exists (safe to re-run on every start)
 const addColumn = (sql) => { try { db.exec(sql); } catch (_) {} };
 addColumn('ALTER TABLE tasks ADD COLUMN planned_date TEXT');
 addColumn('ALTER TABLE tasks ADD COLUMN priority    INTEGER DEFAULT 2');
 addColumn('ALTER TABLE tasks ADD COLUMN sort_order  INTEGER DEFAULT 0');
 addColumn('ALTER TABLE tasks ADD COLUMN category_id INTEGER REFERENCES categories(id) ON DELETE SET NULL');
 
-// One-time data migration tracked by user_version so it never re-runs on restart
+// Versioned one-time migrations — user_version tracks which have run, so they never re-run
 const schemaVersion = db.pragma('user_version', { simple: true });
+
 if (schemaVersion < 1) {
-  db.exec("UPDATE tasks SET planned_date = date WHERE planned_date IS NULL AND date IS NOT NULL AND date != ''");
+  // Copy legacy `date` column into `planned_date` if it exists
+  const hasDateCol = db.prepare("PRAGMA table_info(tasks)").all().some(c => c.name === 'date');
+  if (hasDateCol) {
+    db.exec("UPDATE tasks SET planned_date = date WHERE planned_date IS NULL AND date IS NOT NULL AND date != ''");
+  }
   db.pragma('user_version = 1');
 }
 
@@ -91,8 +96,8 @@ app.post('/api/tasks', (req, res) => {
   if (!title?.trim()) return res.status(400).json({ error: 'Title is required' });
 
   const { lastInsertRowid } = db.prepare(
-    'INSERT INTO tasks (title, notes, time_rating, priority, date, category_id) VALUES (?, ?, ?, ?, ?, ?)'
-  ).run(title.trim(), notes.trim(), time_rating, priority, '', category_id ?? null);
+    'INSERT INTO tasks (title, notes, time_rating, priority, category_id) VALUES (?, ?, ?, ?, ?)'
+  ).run(title.trim(), notes.trim(), time_rating, priority, category_id ?? null);
 
   res.status(201).json(
     db.prepare(TASK_WITH_TOTALS + ' WHERE t.id = ? GROUP BY t.id').get(lastInsertRowid)
