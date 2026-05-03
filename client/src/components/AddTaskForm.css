@@ -1,0 +1,112 @@
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.label {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.optional {
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--text-muted);
+}
+
+.input {
+  font-size: 16px;
+  font-family: inherit;
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  padding: 13px 14px;
+  color: var(--text);
+  background: white;
+  outline: none;
+  transition: border-color 0.15s;
+  width: 100%;
+  -webkit-appearance: none;
+}
+
+.input:focus {
+  border-color: var(--primary);
+}
+
+.textarea {
+  resize: none;
+  line-height: 1.5;
+}
+
+/* Rating grids */
+.rating-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+.rating-grid--3 {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.rating-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 16px 8px;
+  border-radius: 12px;
+  border: 1.5px solid var(--border);
+  background: var(--bg);
+  cursor: pointer;
+  transition: all 0.15s;
+  -webkit-tap-highlight-color: transparent;
+  min-height: 80px;
+}
+
+.rating-label {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.rating-sub {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+/* Active states */
+.rating-btn--time-1.rating-btn--active { background: color-mix(in srgb, var(--time-1) 15%, white); border-color: var(--time-1); }
+.rating-btn--time-2.rating-btn--active { background: color-mix(in srgb, var(--time-2) 15%, white); border-color: var(--time-2); }
+.rating-btn--time-3.rating-btn--active { background: color-mix(in srgb, var(--time-3) 15%, white); border-color: var(--time-3); }
+.rating-btn--time-4.rating-btn--active { background: color-mix(in srgb, var(--time-4) 15%, white); border-color: var(--time-4); }
+
+.rating-btn--time-1.rating-btn--active .rating-label { color: var(--time-1); }
+.rating-btn--time-2.rating-btn--active .rating-label { color: var(--time-2); }
+.rating-btn--time-3.rating-btn--active .rating-label { color: var(--time-3); }
+.rating-btn--time-4.rating-btn--active .rating-label { color: var(--time-4); }
+
+/* Priority buttons (3-col grid) */
+.priority-btn {
+  min-height: 72px;
+}
+
+.priority-btn.priority-btn--active {
+  background: color-mix(in srgb, var(--p-color) 12%, white);
+  border-color: var(--p-color);
+}
+
+.priority-btn.priority-btn--active .rating-label {
+  color: var(--p-color);
+}

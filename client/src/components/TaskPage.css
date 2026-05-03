@@ -1,0 +1,94 @@
+.task-page {
+  position: fixed;
+  inset: 0;
+  background: var(--bg);
+  z-index: 50;
+  overflow-y: auto;
+  overscroll-behavior: none;
+  -webkit-overflow-scrolling: touch;
+  animation: page-enter 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+@keyframes page-enter {
+  from { transform: translateX(32px); opacity: 0; }
+  to   { transform: translateX(0);    opacity: 1; }
+}
+
+.page-header {
+  background: var(--header-bg);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  height: 52px;
+  padding: 0 4px;
+  padding-top: env(safe-area-inset-top, 0);
+  height: calc(52px + env(safe-area-inset-top, 0px));
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.btn-page-back {
+  background: none;
+  border: none;
+  color: white;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 16px;
+  padding: 8px 10px;
+  cursor: pointer;
+  min-width: 80px;
+  min-height: 44px;
+  -webkit-tap-highlight-color: transparent;
+  opacity: 0.9;
+}
+
+.btn-page-back:active { opacity: 0.6; }
+
+.page-header-title {
+  font-size: 17px;
+  font-weight: 600;
+  flex: 1;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.btn-page-action {
+  background: none;
+  border: none;
+  color: var(--primary);
+  font-size: 16px;
+  font-weight: 700;
+  padding: 8px 10px;
+  cursor: pointer;
+  min-width: 80px;
+  min-height: 44px;
+  text-align: right;
+  -webkit-tap-highlight-color: transparent;
+  transition: opacity 0.15s;
+}
+
+.btn-page-action:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.page-body {
+  padding: 20px 16px max(32px, env(safe-area-inset-bottom, 32px));
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+.page-body .form {
+  gap: 20px;
+}
+
+.page-body .section {
+  margin-top: 24px;
+  padding-top: 24px;
+}

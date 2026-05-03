@@ -1,0 +1,46 @@
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --primary: #E07B39;
+  --primary-dark: #C5622A;
+  --header-bg: #1C2B3A;
+  --bg: #F2EFE9;
+  --card-bg: #FFFFFF;
+  --text: #1A1A1A;
+  --text-muted: #6B6B6B;
+  --border: #E0DADA;
+  --shadow: 0 2px 8px rgba(0,0,0,0.08);
+  --radius: 14px;
+
+  --time-1: #27AE60;
+  --time-2: #2980B9;
+  --time-3: #E67E22;
+  --time-4: #8E44AD;
+  --cost-1: #27AE60;
+  --cost-2: #2980B9;
+  --cost-3: #E67E22;
+  --cost-4: #E74C3C;
+}
+
+html, body {
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+}
+
+#root {
+  height: 100%;
+  overflow-y: auto;
+  overscroll-behavior: none;
+  -webkit-overflow-scrolling: touch;
+}

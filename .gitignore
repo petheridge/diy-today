@@ -1,0 +1,21 @@
+# Dependencies
+node_modules/
+client/node_modules/
+
+# Build output
+client/dist/
+
+# Database (contains personal data)
+*.db
+*.sqlite
+
+# Environment
+.env
+.env.local
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+npm-debug.log*

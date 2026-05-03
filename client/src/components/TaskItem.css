@@ -1,0 +1,99 @@
+.task-card {
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 12px 14px 6px;
+  cursor: pointer;
+  transition: opacity 0.2s ease, transform 0.1s ease;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+.task-card:active {
+  transform: scale(0.98);
+}
+
+.task-card--done {
+  opacity: 0.55;
+}
+
+.task-check {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  flex-shrink: 0;
+  line-height: 0;
+  -webkit-tap-highlight-color: transparent;
+  min-width: 44px;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.task-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.task-title {
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.3;
+  word-break: break-word;
+}
+
+.task-card--done .task-title {
+  text-decoration: line-through;
+  color: var(--text-muted);
+}
+
+.task-notes {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-top: 3px;
+  line-height: 1.4;
+  word-break: break-word;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.task-badges {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+
+.badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 20px;
+  background: color-mix(in srgb, var(--badge-color) 15%, transparent);
+  color: var(--badge-color);
+  white-space: nowrap;
+}
+
+.time-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.cost-badge {
+  background: #F1F3F5;
+  color: #9AA5B4;
+}
+
+.task-chevron {
+  color: #C8C4BE;
+  flex-shrink: 0;
+  line-height: 0;
+  padding-right: 2px;
+}

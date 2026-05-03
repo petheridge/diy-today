@@ -1,0 +1,189 @@
+.today-section {
+  background: white;
+  border-bottom: 1px solid var(--border);
+  padding: 0 16px 16px;
+}
+
+.section-label-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 0 12px;
+}
+
+.section-label {
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--primary);
+}
+
+.section-count {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.today-empty {
+  padding: 20px 0 8px;
+  text-align: center;
+}
+
+.today-empty-text {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+
+.today-empty-sub {
+  font-size: 13px;
+  color: var(--text-muted);
+  opacity: 0.7;
+}
+
+.today-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.done-divider {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--text-muted);
+  margin: 4px 0 2px;
+}
+
+/* Task card */
+.today-card {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  background: var(--bg);
+  border-radius: 12px;
+  padding: 10px 8px 10px 6px;
+  transition: opacity 0.2s, box-shadow 0.2s;
+}
+
+.today-card--done {
+  opacity: 0.5;
+}
+
+.today-card--dragging {
+  box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+  background: white;
+  opacity: 0.95;
+}
+
+/* Drag handle */
+.drag-handle {
+  color: #C8C4BE;
+  cursor: grab;
+  padding: 8px 6px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 36px;
+  min-height: 44px;
+  touch-action: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.drag-handle:active {
+  cursor: grabbing;
+  color: #999;
+}
+
+/* Check button */
+.today-check {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  flex-shrink: 0;
+  line-height: 0;
+  -webkit-tap-highlight-color: transparent;
+  min-width: 44px;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Card body */
+.today-card-body {
+  flex: 1;
+  min-width: 0;
+  cursor: pointer;
+  padding: 2px 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.today-card-title {
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.3;
+  word-break: break-word;
+}
+
+.today-card--done .today-card-title {
+  text-decoration: line-through;
+  color: var(--text-muted);
+}
+
+/* Remove button */
+.today-remove {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #C8C4BE;
+  flex-shrink: 0;
+  min-width: 40px;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  -webkit-tap-highlight-color: transparent;
+  transition: color 0.15s;
+}
+
+.today-remove:active { color: var(--text-muted); }
+
+/* Shared badges */
+.task-badges {
+  display: flex;
+  gap: 5px;
+  margin-top: 5px;
+  flex-wrap: wrap;
+}
+
+.badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 20px;
+  background: color-mix(in srgb, var(--badge-color) 15%, transparent);
+  color: var(--badge-color);
+  white-space: nowrap;
+}
+
+.time-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.cost-badge {
+  background: #F1F3F5;
+  color: #9AA5B4;
+}
+
+.category-badge {
+  background: #F0F2F5;
+  color: #8A96A6;
+}
