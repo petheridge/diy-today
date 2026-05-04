@@ -87,8 +87,7 @@
 }
 
 .cost-badge {
-  background: #F1F3F5;
-  color: #9AA5B4;
+  /* colour driven by --badge-color set inline from costColor() */
 }
 
 .task-chevron {

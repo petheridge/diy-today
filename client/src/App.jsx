@@ -26,20 +26,30 @@ export default function App() {
   const [allTasks, setAllTasks]     = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading]       = useState(true);
+  const [error, setError]           = useState(null);
   const [showForm, setShowForm]     = useState(false);
   const [editingTask, setEditingTask] = useState(null);
   const [backlogSort, setBacklogSort] = useState('priority');
   const today = getToday();
 
   const fetchTasks = useCallback(async () => {
-    const res = await fetch('/api/tasks');
-    setAllTasks(await res.json());
-    setLoading(false);
+    try {
+      const res = await fetch('/api/tasks');
+      if (!res.ok) throw new Error();
+      setAllTasks(await res.json());
+    } catch (_) {
+      setError('Could not load tasks — check your connection.');
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   const fetchCategories = useCallback(async () => {
-    const res = await fetch('/api/categories');
-    setCategories(await res.json());
+    try {
+      const res = await fetch('/api/categories');
+      if (!res.ok) throw new Error();
+      setCategories(await res.json());
+    } catch (_) {}
   }, []);
 
   useEffect(() => { fetchTasks(); fetchCategories(); }, [fetchTasks, fetchCategories]);
@@ -50,7 +60,7 @@ export default function App() {
     .sort((a, b) => (a.sort_order - b.sort_order) || (a.created_at > b.created_at ? 1 : -1));
 
   const backlogTasks = allTasks
-    .filter(t => t.planned_date !== today)
+    .filter(t => t.planned_date !== today && !t.completed)
     .sort(SORT_FNS[backlogSort]);
 
   const deleteCategory = async (id) => {
@@ -77,38 +87,46 @@ export default function App() {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
-    }).then(r => r.json());
+    }).then(r => { if (!r.ok) throw new Error(); return r.json(); });
 
   const addTask = async ({ materials = [], tools = [], ...fields }) => {
-    const res = await fetch('/api/tasks', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(fields),
-    });
-    if (!res.ok) return;
-    const task = await res.json();
-    if (materials.length || tools.length) {
-      await Promise.all([
-        ...materials.map(m => fetch(`/api/tasks/${task.id}/materials`, {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(m),
-        })),
-        ...tools.map(t => fetch(`/api/tasks/${task.id}/tools`, {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(t),
-        })),
-      ]);
-      await fetchTasks();
-    } else {
-      setAllTasks(prev => [...prev, task]);
+    try {
+      const res = await fetch('/api/tasks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(fields),
+      });
+      if (!res.ok) throw new Error();
+      const task = await res.json();
+      if (materials.length || tools.length) {
+        await Promise.all([
+          ...materials.map(m => fetch(`/api/tasks/${task.id}/materials`, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(m),
+          })),
+          ...tools.map(t => fetch(`/api/tasks/${task.id}/tools`, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(t),
+          })),
+        ]);
+        await fetchTasks();
+      } else {
+        setAllTasks(prev => [...prev, task]);
+      }
+      setShowForm(false);
+    } catch (_) {
+      setError('Could not save task — please try again.');
     }
-    setShowForm(false);
   };
 
   const updateTask = async (id, data) => {
-    const updated = await put(id, data);
-    setAllTasks(prev => prev.map(t => t.id === id ? updated : t));
-    setEditingTask(null);
+    try {
+      const updated = await put(id, data);
+      setAllTasks(prev => prev.map(t => t.id === id ? updated : t));
+      setEditingTask(null);
+    } catch (_) {
+      setError('Could not save changes — please try again.');
+    }
   };
 
   const updateTaskCosts = (id, { total_cost, material_count }) => {
@@ -116,19 +134,31 @@ export default function App() {
   };
 
   const toggleComplete = async (id, completed) => {
-    const updated = await put(id, { completed: !completed });
-    setAllTasks(prev => prev.map(t => t.id === id ? updated : t));
+    try {
+      const updated = await put(id, { completed: !completed });
+      setAllTasks(prev => prev.map(t => t.id === id ? updated : t));
+    } catch (_) {
+      setError('Could not update task — please try again.');
+    }
   };
 
   const addToToday = async (id) => {
-    const maxOrder = todayTasks.reduce((m, t) => Math.max(m, t.sort_order || 0), 0);
-    const updated = await put(id, { planned_date: today, sort_order: maxOrder + 1, completed: false });
-    setAllTasks(prev => prev.map(t => t.id === id ? updated : t));
+    try {
+      const maxOrder = todayTasks.reduce((m, t) => Math.max(m, t.sort_order || 0), 0);
+      const updated = await put(id, { planned_date: today, sort_order: maxOrder + 1, completed: false });
+      setAllTasks(prev => prev.map(t => t.id === id ? updated : t));
+    } catch (_) {
+      setError('Could not add task to today — please try again.');
+    }
   };
 
   const removeFromToday = async (id) => {
-    const updated = await put(id, { planned_date: null, completed: false });
-    setAllTasks(prev => prev.map(t => t.id === id ? updated : t));
+    try {
+      const updated = await put(id, { planned_date: null, completed: false });
+      setAllTasks(prev => prev.map(t => t.id === id ? updated : t));
+    } catch (_) {
+      setError('Could not remove task — please try again.');
+    }
   };
 
   const reorderToday = async (activeId, overId) => {
@@ -142,6 +172,7 @@ export default function App() {
     reordered.splice(newIdx, 0, item);
 
     const withOrder = reordered.map((t, i) => ({ ...t, sort_order: (i + 1) * 1000 }));
+    const snapshot = allTasks;
 
     // Optimistic update
     setAllTasks(prev => {
@@ -149,13 +180,23 @@ export default function App() {
       return [...prev.filter(t => !ids.has(t.id)), ...withOrder];
     });
 
-    await Promise.all(withOrder.map(t => put(t.id, { sort_order: t.sort_order })));
+    try {
+      await Promise.all(withOrder.map(t => put(t.id, { sort_order: t.sort_order })));
+    } catch (_) {
+      setAllTasks(snapshot);
+      setError('Could not save order — please try again.');
+    }
   };
 
   const deleteTask = async (id) => {
-    await fetch(`/api/tasks/${id}`, { method: 'DELETE' });
-    setAllTasks(prev => prev.filter(t => t.id !== id));
-    setEditingTask(null);
+    try {
+      const res = await fetch(`/api/tasks/${id}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error();
+      setAllTasks(prev => prev.filter(t => t.id !== id));
+      setEditingTask(null);
+    } catch (_) {
+      setError('Could not delete task — please try again.');
+    }
   };
 
   const todayDone  = todayTasks.filter(t => t.completed).length;
@@ -164,6 +205,12 @@ export default function App() {
 
   return (
     <div className="app">
+      {error && (
+        <div className="error-banner" role="alert">
+          <span>{error}</span>
+          <button className="error-dismiss" onClick={() => setError(null)} aria-label="Dismiss">✕</button>
+        </div>
+      )}
       <header className="header">
         <div className="header-top">
           <div>

@@ -74,12 +74,10 @@ const TASK_WITH_TOTALS = `
   SELECT t.*,
          c.name                             AS category_name,
          COALESCE(SUM(m.estimated_cost), 0) AS total_cost,
-         COUNT(DISTINCT m.id)               AS material_count,
-         COUNT(DISTINCT tl.id)              AS tool_count
+         COUNT(DISTINCT m.id)               AS material_count
   FROM   tasks t
-  LEFT JOIN categories c  ON c.id       = t.category_id
-  LEFT JOIN materials  m  ON m.task_id  = t.id
-  LEFT JOIN tools      tl ON tl.task_id = t.id
+  LEFT JOIN categories c ON c.id      = t.category_id
+  LEFT JOIN materials  m ON m.task_id = t.id
 `;
 
 // All tasks (client splits into today / backlog)
@@ -154,6 +152,8 @@ app.put('/api/materials/:id', (req, res) => {
   res.json(db.prepare('SELECT * FROM materials WHERE id = ?').get(req.params.id));
 });
 app.delete('/api/materials/:id', (req, res) => {
+  const material = db.prepare('SELECT id FROM materials WHERE id = ?').get(req.params.id);
+  if (!material) return res.status(404).json({ error: 'Not found' });
   db.prepare('DELETE FROM materials WHERE id = ?').run(req.params.id);
   res.status(204).send();
 });
@@ -177,6 +177,8 @@ app.put('/api/tools/:id', (req, res) => {
   res.json(db.prepare('SELECT * FROM tools WHERE id = ?').get(req.params.id));
 });
 app.delete('/api/tools/:id', (req, res) => {
+  const tool = db.prepare('SELECT id FROM tools WHERE id = ?').get(req.params.id);
+  if (!tool) return res.status(404).json({ error: 'Not found' });
   db.prepare('DELETE FROM tools WHERE id = ?').run(req.params.id);
   res.status(204).send();
 });

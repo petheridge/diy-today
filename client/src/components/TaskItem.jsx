@@ -9,6 +9,12 @@ function formatCost(total) {
   return `£${total.toFixed(2)}`;
 }
 
+function costColor(total) {
+  if (total < 20)  return '#16a34a';
+  if (total < 100) return '#d97706';
+  return '#dc2626';
+}
+
 function TimeIcon({ rating }) {
   const r = 8, cx = 10, cy = 10;
   const circ = 2 * Math.PI * r;
@@ -90,6 +96,7 @@ export default function TaskItem({ task, onToggle, onEdit }) {
           {material_count > 0 && (
             <span
               className="badge cost-badge"
+              style={{ '--badge-color': costColor(total_cost) }}
               title={`${material_count} material${material_count !== 1 ? 's' : ''}`}
             >
               {formatCost(total_cost)}
