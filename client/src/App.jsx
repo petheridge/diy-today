@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import TodaySection from './components/TodaySection';
 import BacklogSection from './components/BacklogSection';
+import HistorySection from './components/HistorySection';
 import TaskForm from './components/TaskForm';
 import './App.css';
 
@@ -30,6 +31,7 @@ export default function App() {
   const [showForm, setShowForm]     = useState(false);
   const [editingTask, setEditingTask] = useState(null);
   const [backlogSort, setBacklogSort] = useState('priority');
+  const [view, setView]             = useState('main');
   const today = getToday();
 
   const fetchTasks = useCallback(async () => {
@@ -62,6 +64,10 @@ export default function App() {
   const backlogTasks = allTasks
     .filter(t => t.planned_date !== today && !t.completed)
     .sort(SORT_FNS[backlogSort]);
+
+  const historyTasks = allTasks
+    .filter(t => t.completed)
+    .sort((a, b) => (b.completed_at ?? b.created_at).localeCompare(a.completed_at ?? a.created_at));
 
   const deleteCategory = async (id) => {
     await fetch(`/api/categories/${id}`, { method: 'DELETE' });
@@ -217,20 +223,28 @@ export default function App() {
             <h1 className="header-title">DIY Today</h1>
             <p className="header-date">{formatDate(today)}</p>
           </div>
-          {todayTotal > 0 && (
+          {todayTotal > 0 && view === 'main' && (
             <span className="header-badge">{todayDone}/{todayTotal}</span>
           )}
         </div>
-        {todayTotal > 0 && (
+        {todayTotal > 0 && view === 'main' && (
           <div className="progress-track">
             <div className="progress-fill" style={{ width: `${progress}%` }} />
           </div>
         )}
+        <div className="view-tabs">
+          <button className={`view-tab ${view === 'main' ? 'view-tab--active' : ''}`} onClick={() => setView('main')}>Plan</button>
+          <button className={`view-tab ${view === 'history' ? 'view-tab--active' : ''}`} onClick={() => setView('history')}>
+            History {historyTasks.length > 0 && <span className="view-tab-count">{historyTasks.length}</span>}
+          </button>
+        </div>
       </header>
 
       <main className="main">
         {loading ? (
           <p className="loading-state">Loading…</p>
+        ) : view === 'history' ? (
+          <HistorySection tasks={historyTasks} onToggle={toggleComplete} />
         ) : (
           <>
             <TodaySection

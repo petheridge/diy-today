@@ -51,6 +51,7 @@ addColumn('ALTER TABLE tasks ADD COLUMN planned_date TEXT');
 addColumn('ALTER TABLE tasks ADD COLUMN priority    INTEGER DEFAULT 2');
 addColumn('ALTER TABLE tasks ADD COLUMN sort_order  INTEGER DEFAULT 0');
 addColumn('ALTER TABLE tasks ADD COLUMN category_id INTEGER REFERENCES categories(id) ON DELETE SET NULL');
+addColumn('ALTER TABLE tasks ADD COLUMN completed_at DATETIME');
 
 // Versioned one-time migrations — user_version tracks which have run, so they never re-run
 const schemaVersion = db.pragma('user_version', { simple: true });
@@ -108,9 +109,14 @@ app.put('/api/tasks/:id', (req, res) => {
   if (!task) return res.status(404).json({ error: 'Not found' });
 
   const body = req.body;
+  const newCompleted = 'completed' in body ? (body.completed ? 1 : 0) : task.completed;
+  const completedAt  = 'completed' in body
+    ? (body.completed ? new Date().toISOString() : null)
+    : task.completed_at;
+
   db.prepare(`
     UPDATE tasks
-    SET title=?, notes=?, time_rating=?, priority=?, planned_date=?, sort_order=?, completed=?, category_id=?
+    SET title=?, notes=?, time_rating=?, priority=?, planned_date=?, sort_order=?, completed=?, completed_at=?, category_id=?
     WHERE id=?
   `).run(
     body.title       ?? task.title,
@@ -119,7 +125,8 @@ app.put('/api/tasks/:id', (req, res) => {
     body.priority    ?? task.priority ?? 2,
     'planned_date' in body ? body.planned_date : task.planned_date,
     body.sort_order  ?? task.sort_order ?? 0,
-    'completed' in body ? (body.completed ? 1 : 0) : task.completed,
+    newCompleted,
+    completedAt,
     'category_id' in body ? (body.category_id ?? null) : task.category_id,
     req.params.id
   );
