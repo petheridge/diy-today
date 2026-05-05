@@ -28,7 +28,13 @@
   background: var(--bg);
 }
 
-/* Compact priority buttons (bottom of edit form) */
+/* Back button highlight when dirty (Save state) */
+.btn-page-back--save {
+  color: var(--primary);
+  opacity: 1;
+}
+
+/* Compact priority buttons (3-col grid) */
 .priority-grid {
   margin-top: 10px;
   gap: 8px;
@@ -57,83 +63,56 @@
   color: var(--p-color);
 }
 
-/* Time slider */
-.time-slider-wrap {
-  margin-top: 14px;
+/* Time selector buttons (4-col grid) */
+.time-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  margin-top: 10px;
 }
 
-.time-slider {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 100%;
-  height: 5px;
-  border-radius: 3px;
-  outline: none;
-  cursor: pointer;
-  margin-bottom: 14px;
-}
-
-.time-slider::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  background: var(--primary);
-  cursor: pointer;
-  box-shadow: 0 1px 5px rgba(0,0,0,0.25);
-  transition: transform 0.1s;
-}
-
-.time-slider::-webkit-slider-thumb:active {
-  transform: scale(1.15);
-}
-
-.time-slider::-moz-range-thumb {
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  background: var(--primary);
-  cursor: pointer;
-  border: none;
-  box-shadow: 0 1px 5px rgba(0,0,0,0.25);
-}
-
-.time-slider-labels {
-  display: flex;
-  justify-content: space-between;
-}
-
-.time-slider-label {
+.time-btn {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2px;
-  flex: 1;
-  text-align: center;
+  justify-content: center;
+  gap: 3px;
+  min-height: 56px;
+  padding: 10px 4px;
+  border-radius: 10px;
+  border: 1.5px solid var(--border);
+  background: var(--bg);
   cursor: pointer;
-  padding: 4px 0;
+  transition: all 0.15s;
+  -webkit-tap-highlight-color: transparent;
 }
 
-.time-slider-label-main {
+.time-btn--active {
+  background: color-mix(in srgb, var(--t-color) 12%, white);
+  border-color: var(--t-color);
+}
+
+.time-btn-main {
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--text-muted);
-  transition: color 0.15s;
+  text-align: center;
+  line-height: 1.2;
 }
 
-.time-slider-label-sub {
+.time-btn--active .time-btn-main {
+  color: var(--t-color);
+}
+
+.time-btn-sub {
   font-size: 11px;
   color: var(--text-muted);
-  opacity: 0.6;
-  transition: color 0.15s, opacity 0.15s;
+  opacity: 0.65;
+  text-align: center;
 }
 
-.time-slider-label--active .time-slider-label-main {
-  color: var(--primary);
-}
-
-.time-slider-label--active .time-slider-label-sub {
-  color: var(--primary);
+.time-btn--active .time-btn-sub {
+  color: var(--t-color);
   opacity: 0.8;
 }
 

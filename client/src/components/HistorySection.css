@@ -68,6 +68,15 @@
 .history-card-body {
   flex: 1;
   min-width: 0;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.history-card-chevron {
+  color: #C8C4BE;
+  flex-shrink: 0;
+  line-height: 0;
+  padding-right: 4px;
 }
 
 .history-card-title {

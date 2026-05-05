@@ -3,8 +3,8 @@ import './BacklogSection.css';
 const TIME_LABELS = ['', 'Quick', 'Half Day', 'Full Day', 'Weekend'];
 const TIME_COLORS = ['', 'var(--time-1)', 'var(--time-2)', 'var(--time-3)', 'var(--time-4)'];
 
-// Neutral slate gradient: dark → mid → light
-const PRIORITY_COLOR = ['', '#334155', '#94A3B8', '#CBD5E1'];
+// Match priority colours used in the task form (High=red, Medium=orange, Low=grey)
+const PRIORITY_COLOR = ['', '#E74C3C', '#E67E22', '#7F8C8D'];
 
 function formatCost(total) {
   if (total === 0) return 'Free';

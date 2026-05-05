@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import TodaySection from './components/TodaySection';
 import BacklogSection from './components/BacklogSection';
 import HistorySection from './components/HistorySection';
@@ -32,6 +32,8 @@ export default function App() {
   const [editingTask, setEditingTask] = useState(null);
   const [backlogSort, setBacklogSort] = useState('priority');
   const [view, setView]             = useState('main');
+  const [undoToast, setUndoToast]   = useState(null); // { id, title }
+  const undoTimerRef = useRef(null);
   const today = getToday();
 
   const fetchTasks = useCallback(async () => {
@@ -55,6 +57,13 @@ export default function App() {
   }, []);
 
   useEffect(() => { fetchTasks(); fetchCategories(); }, [fetchTasks, fetchCategories]);
+
+  // Auto-dismiss errors after 5 s
+  useEffect(() => {
+    if (!error) return;
+    const t = setTimeout(() => setError(null), 5000);
+    return () => clearTimeout(t);
+  }, [error]);
 
   // Derived views
   const todayTasks = allTasks
@@ -143,8 +152,30 @@ export default function App() {
     try {
       const updated = await put(id, { completed: !completed });
       setAllTasks(prev => prev.map(t => t.id === id ? updated : t));
+      if (!completed) {
+        const task = allTasks.find(t => t.id === id);
+        clearTimeout(undoTimerRef.current);
+        setUndoToast({ id, title: task?.title ?? '' });
+        undoTimerRef.current = setTimeout(() => setUndoToast(null), 3500);
+      } else {
+        clearTimeout(undoTimerRef.current);
+        setUndoToast(null);
+      }
     } catch (_) {
       setError('Could not update task — please try again.');
+    }
+  };
+
+  const handleUndo = async () => {
+    clearTimeout(undoTimerRef.current);
+    const toast = undoToast;
+    setUndoToast(null);
+    if (!toast) return;
+    try {
+      const updated = await put(toast.id, { completed: false });
+      setAllTasks(prev => prev.map(t => t.id === toast.id ? updated : t));
+    } catch (_) {
+      setError('Could not undo — please try again.');
     }
   };
 
@@ -180,7 +211,6 @@ export default function App() {
     const withOrder = reordered.map((t, i) => ({ ...t, sort_order: (i + 1) * 1000 }));
     const snapshot = allTasks;
 
-    // Optimistic update
     setAllTasks(prev => {
       const ids = new Set(withOrder.map(t => t.id));
       return [...prev.filter(t => !ids.has(t.id)), ...withOrder];
@@ -208,6 +238,7 @@ export default function App() {
   const todayDone  = todayTasks.filter(t => t.completed).length;
   const todayTotal = todayTasks.length;
   const progress   = todayTotal > 0 ? (todayDone / todayTotal) * 100 : 0;
+  const historyBadge = historyTasks.length > 99 ? '99+' : historyTasks.length;
 
   return (
     <div className="app">
@@ -235,7 +266,7 @@ export default function App() {
         <div className="view-tabs">
           <button className={`view-tab ${view === 'main' ? 'view-tab--active' : ''}`} onClick={() => setView('main')}>Plan</button>
           <button className={`view-tab ${view === 'history' ? 'view-tab--active' : ''}`} onClick={() => setView('history')}>
-            History {historyTasks.length > 0 && <span className="view-tab-count">{historyTasks.length}</span>}
+            History {historyTasks.length > 0 && <span className="view-tab-count">{historyBadge}</span>}
           </button>
         </div>
       </header>
@@ -244,7 +275,7 @@ export default function App() {
         {loading ? (
           <p className="loading-state">Loading…</p>
         ) : view === 'history' ? (
-          <HistorySection tasks={historyTasks} onToggle={toggleComplete} />
+          <HistorySection tasks={historyTasks} onToggle={toggleComplete} onEdit={setEditingTask} />
         ) : (
           <>
             <TodaySection
@@ -264,6 +295,13 @@ export default function App() {
           </>
         )}
       </main>
+
+      {undoToast && (
+        <div className="undo-toast" role="status">
+          <span className="undo-toast-text">"{undoToast.title}" done</span>
+          <button className="undo-toast-btn" onClick={handleUndo}>Undo</button>
+        </div>
+      )}
 
       <button className="fab" onClick={() => setShowForm(true)} aria-label="New task">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">

@@ -17,6 +17,8 @@ const TIME_OPTIONS = [
   { value: 4, label: 'Weekend',  sub: '2+ days' },
 ];
 
+const TIME_COLORS = ['', 'var(--time-1)', 'var(--time-2)', 'var(--time-3)', 'var(--time-4)'];
+
 let _tempId = 0;
 const tempId = () => ++_tempId;
 
@@ -57,8 +59,16 @@ export default function TaskForm({ task, onSave, onDelete, onClose, onAddToToday
   const [showAddMaterial, setShowAddMaterial] = useState(false);
   const [showAddTool, setShowAddTool]         = useState(false);
 
-  const dirty = useRef(false);
   const dropdownRef = useRef(null);
+
+  // Compute dirtiness from state directly — no ref needed
+  const isDirty = isEdit && (
+    title !== (task?.title ?? '') ||
+    notes !== (task?.notes ?? '') ||
+    timeRating !== (task?.time_rating ?? 1) ||
+    priority !== (task?.priority ?? 2) ||
+    categoryId !== (task?.category_id ?? null)
+  );
 
   useEffect(() => {
     if (!showDropdown) return;
@@ -72,17 +82,6 @@ export default function TaskForm({ task, onSave, onDelete, onClose, onAddToToday
 
   useEffect(() => {
     if (!isEdit) return;
-    if (
-      title !== task.title ||
-      notes !== (task.notes || '') ||
-      timeRating !== task.time_rating ||
-      priority !== (task.priority || 2) ||
-      categoryId !== (task.category_id ?? null)
-    ) dirty.current = true;
-  }, [title, notes, timeRating, priority, categoryId, task, isEdit]);
-
-  useEffect(() => {
-    if (!isEdit) return;
     Promise.all([
       fetch(`/api/tasks/${task.id}/materials`).then(r => r.json()),
       fetch(`/api/tasks/${task.id}/tools`).then(r => r.json()),
@@ -90,8 +89,10 @@ export default function TaskForm({ task, onSave, onDelete, onClose, onAddToToday
   }, [task?.id, isEdit]);
 
   const handleBack = async () => {
-    if (dirty.current && title.trim()) {
+    if (isDirty && title.trim()) {
+      setSubmitting(true);
       await onSave({ title, notes, time_rating: timeRating, priority, category_id: categoryId });
+      setSubmitting(false);
     } else {
       onClose();
     }
@@ -193,21 +194,22 @@ export default function TaskForm({ task, onSave, onDelete, onClose, onAddToToday
     setTools(p => p.filter(t => t.id !== id));
   };
 
-  const sliderFill = `${(timeRating - 1) / 3 * 100}%`;
+  const backLabel = isEdit ? (isDirty ? 'Save' : 'Back') : 'Cancel';
 
   return (
     <div className="task-page">
       <header className="page-header">
         <button
-          className="btn-page-back"
+          className={`btn-page-back ${isEdit && isDirty ? 'btn-page-back--save' : ''}`}
           type="button"
           onClick={isEdit ? handleBack : onClose}
-          aria-label={isEdit ? 'Back' : 'Cancel'}
+          aria-label={backLabel}
+          disabled={submitting}
         >
           {isEdit ? <BackIcon /> : <CloseIcon />}
-          <span>{isEdit ? 'Back' : 'Cancel'}</span>
+          <span>{backLabel}</span>
         </button>
-        <h1 className="page-header-title">{isEdit ? task.title : 'New Task'}</h1>
+        <h1 className="page-header-title">{isEdit ? (title || task.title) : 'New Task'}</h1>
         {isEdit ? (
           <div style={{ minWidth: 80 }} />
         ) : (
@@ -384,27 +386,19 @@ export default function TaskForm({ task, onSave, onDelete, onClose, onAddToToday
 
         <div className="section">
           <label className="label">Time needed</label>
-          <div className="time-slider-wrap">
-            <input
-              type="range"
-              className="time-slider"
-              min="1" max="4" step="1"
-              value={timeRating}
-              onChange={e => setTimeRating(+e.target.value)}
-              style={{ background: `linear-gradient(to right, var(--primary) ${sliderFill}, var(--border) ${sliderFill})` }}
-            />
-            <div className="time-slider-labels">
-              {TIME_OPTIONS.map(opt => (
-                <span
-                  key={opt.value}
-                  className={`time-slider-label ${timeRating === opt.value ? 'time-slider-label--active' : ''}`}
-                  onClick={() => setTimeRating(opt.value)}
-                >
-                  <span className="time-slider-label-main">{opt.label}</span>
-                  <span className="time-slider-label-sub">{opt.sub}</span>
-                </span>
-              ))}
-            </div>
+          <div className="time-grid">
+            {TIME_OPTIONS.map(opt => (
+              <button
+                key={opt.value}
+                type="button"
+                className={`time-btn ${timeRating === opt.value ? 'time-btn--active' : ''}`}
+                style={{ '--t-color': TIME_COLORS[opt.value] }}
+                onClick={() => setTimeRating(opt.value)}
+              >
+                <span className="time-btn-main">{opt.label}</span>
+                <span className="time-btn-sub">{opt.sub}</span>
+              </button>
+            ))}
           </div>
         </div>
 
