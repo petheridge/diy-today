@@ -32,14 +32,13 @@ function formatGroupDate(dateStr) {
   });
 }
 
-function HistoryTaskItem({ task, onToggle }) {
+function HistoryTaskItem({ task, onToggle, onEdit }) {
   return (
     <div className="history-card">
       <button
         className="history-check"
         onClick={() => onToggle(task.id, task.completed)}
-        aria-label="Mark incomplete"
-        title="Restore to backlog"
+        aria-label="Restore to backlog"
       >
         <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
           <circle cx="11" cy="11" r="10" fill="var(--primary)" />
@@ -47,7 +46,7 @@ function HistoryTaskItem({ task, onToggle }) {
         </svg>
       </button>
 
-      <div className="history-card-body">
+      <div className="history-card-body" onClick={() => onEdit(task)} role="button" aria-label={`Edit: ${task.title}`}>
         <p className="history-card-title">{task.title}</p>
         <div className="task-badges">
           <span className="badge time-badge" style={{ '--badge-color': TIME_COLORS[task.time_rating] }}>
@@ -63,11 +62,17 @@ function HistoryTaskItem({ task, onToggle }) {
           )}
         </div>
       </div>
+
+      <div className="history-card-chevron" aria-hidden="true">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <polyline points="9 18 15 12 9 6" />
+        </svg>
+      </div>
     </div>
   );
 }
 
-export default function HistorySection({ tasks, onToggle }) {
+export default function HistorySection({ tasks, onToggle, onEdit }) {
   if (tasks.length === 0) {
     return (
       <section className="history-section">
@@ -100,7 +105,7 @@ export default function HistorySection({ tasks, onToggle }) {
           <p className="history-group-header">{formatGroupDate(dateKey)}</p>
           <div className="history-list">
             {byDate.get(dateKey).map(task => (
-              <HistoryTaskItem key={task.id} task={task} onToggle={onToggle} />
+              <HistoryTaskItem key={task.id} task={task} onToggle={onToggle} onEdit={onEdit} />
             ))}
           </div>
         </div>

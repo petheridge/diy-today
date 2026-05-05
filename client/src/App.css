@@ -48,16 +48,16 @@
 }
 
 .progress-track {
-  height: 4px;
+  height: 7px;
   background: rgba(255,255,255,0.15);
-  border-radius: 2px;
+  border-radius: 4px;
   overflow: hidden;
 }
 
 .progress-fill {
   height: 100%;
   background: var(--primary);
-  border-radius: 2px;
+  border-radius: 4px;
   transition: width 0.4s ease;
 }
 
@@ -138,6 +138,54 @@
   color: var(--text-muted);
   margin-top: 60px;
   font-size: 15px;
+}
+
+/* Undo toast */
+.undo-toast {
+  position: fixed;
+  bottom: max(88px, calc(env(safe-area-inset-bottom, 0px) + 88px));
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #1C2B3A;
+  color: white;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 12px 8px 12px 16px;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+  z-index: 30;
+  white-space: nowrap;
+  max-width: calc(100vw - 32px);
+  animation: toast-in 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.undo-toast-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+  min-width: 0;
+}
+
+.undo-toast-btn {
+  background: var(--primary);
+  border: none;
+  border-radius: 8px;
+  color: white;
+  font-size: 14px;
+  font-weight: 700;
+  padding: 8px 14px;
+  cursor: pointer;
+  flex-shrink: 0;
+  min-height: 36px;
+  -webkit-tap-highlight-color: transparent;
+}
+
+@keyframes toast-in {
+  from { opacity: 0; transform: translateX(-50%) translateY(8px); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
 }
 
 /* FAB */
