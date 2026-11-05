@@ -3,6 +3,7 @@ import TodaySection from './components/TodaySection';
 import BacklogSection from './components/BacklogSection';
 import HistorySection from './components/HistorySection';
 import TaskForm from './components/TaskForm';
+import { withViewTransition, usePresence, useLatest, exitMs, DUR } from './motion';
 import './App.css';
 
 const getToday = () => new Date().toISOString().split('T')[0];
@@ -34,7 +35,36 @@ export default function App() {
   const [view, setView]             = useState('main');
   const [undoToast, setUndoToast]   = useState(null); // { id, title }
   const undoTimerRef = useRef(null);
+  const [stagger, setStagger]       = useState(false);
+  const [pillMoved, setPillMoved]   = useState(0);
   const today = getToday();
+
+  // Undo toast stays mounted briefly so it can animate out
+  const [toastMounted, toastExiting] = usePresence(!!undoToast, exitMs(DUR.base));
+  const shownToast = useLatest(undoToast);
+
+  // Rows stagger in on first load and whenever the view changes
+  const staggerTimer = useRef(null);
+  const playStagger = () => {
+    setStagger(true);
+    clearTimeout(staggerTimer.current);
+    staggerTimer.current = setTimeout(() => setStagger(false), 700);
+  };
+  useEffect(() => { if (!loading) playStagger(); }, [loading]);
+
+  const switchView = (next) => {
+    if (next === view) return;
+    setPillMoved(n => n + 1);
+    withViewTransition(() => { setView(next); playStagger(); });
+  };
+
+  const changeSort = (next) => withViewTransition(() => setBacklogSort(next));
+
+  // The tapped card (or the + button) morphs into the task page and back
+  const openEdit  = (task) => withViewTransition(() => setEditingTask(task), 'open');
+  const closeEdit = ()     => withViewTransition(() => setEditingTask(null), 'close');
+  const openNew   = ()     => withViewTransition(() => setShowForm(true), 'open');
+  const closeNew  = ()     => withViewTransition(() => setShowForm(false), 'close');
 
   const fetchTasks = useCallback(async () => {
     try {
@@ -125,10 +155,10 @@ export default function App() {
           })),
         ]);
         await fetchTasks();
+        withViewTransition(() => setShowForm(false), 'close');
       } else {
-        setAllTasks(prev => [...prev, task]);
+        withViewTransition(() => { setAllTasks(prev => [...prev, task]); setShowForm(false); }, 'close');
       }
-      setShowForm(false);
     } catch (_) {
       setError('Could not save task — please try again.');
     }
@@ -137,8 +167,10 @@ export default function App() {
   const updateTask = async (id, data) => {
     try {
       const updated = await put(id, data);
-      setAllTasks(prev => prev.map(t => t.id === id ? updated : t));
-      setEditingTask(null);
+      withViewTransition(() => {
+        setAllTasks(prev => prev.map(t => t.id === id ? updated : t));
+        setEditingTask(null);
+      }, 'close');
     } catch (_) {
       setError('Could not save changes — please try again.');
     }
@@ -151,7 +183,7 @@ export default function App() {
   const toggleComplete = async (id, completed) => {
     try {
       const updated = await put(id, { completed: !completed });
-      setAllTasks(prev => prev.map(t => t.id === id ? updated : t));
+      withViewTransition(() => setAllTasks(prev => prev.map(t => t.id === id ? updated : t)));
       if (!completed) {
         const task = allTasks.find(t => t.id === id);
         clearTimeout(undoTimerRef.current);
@@ -173,26 +205,33 @@ export default function App() {
     if (!toast) return;
     try {
       const updated = await put(toast.id, { completed: false });
-      setAllTasks(prev => prev.map(t => t.id === toast.id ? updated : t));
+      withViewTransition(() => setAllTasks(prev => prev.map(t => t.id === toast.id ? updated : t)));
     } catch (_) {
       setError('Could not undo — please try again.');
     }
   };
 
-  const addToToday = async (id) => {
+  // `close` shuts the task page in the same transition as the list move
+  const addToToday = async (id, { close = false } = {}) => {
     try {
       const maxOrder = todayTasks.reduce((m, t) => Math.max(m, t.sort_order || 0), 0);
       const updated = await put(id, { planned_date: today, sort_order: maxOrder + 1, completed: false });
-      setAllTasks(prev => prev.map(t => t.id === id ? updated : t));
+      withViewTransition(() => {
+        setAllTasks(prev => prev.map(t => t.id === id ? updated : t));
+        if (close) setEditingTask(null);
+      }, close ? 'close' : 'default');
     } catch (_) {
       setError('Could not add task to today — please try again.');
     }
   };
 
-  const removeFromToday = async (id) => {
+  const removeFromToday = async (id, { close = false } = {}) => {
     try {
       const updated = await put(id, { planned_date: null, completed: false });
-      setAllTasks(prev => prev.map(t => t.id === id ? updated : t));
+      withViewTransition(() => {
+        setAllTasks(prev => prev.map(t => t.id === id ? updated : t));
+        if (close) setEditingTask(null);
+      }, close ? 'close' : 'default');
     } catch (_) {
       setError('Could not remove task — please try again.');
     }
@@ -228,8 +267,10 @@ export default function App() {
     try {
       const res = await fetch(`/api/tasks/${id}`, { method: 'DELETE' });
       if (!res.ok) throw new Error();
-      setAllTasks(prev => prev.filter(t => t.id !== id));
-      setEditingTask(null);
+      withViewTransition(() => {
+        setAllTasks(prev => prev.filter(t => t.id !== id));
+        setEditingTask(null);
+      }, 'close');
     } catch (_) {
       setError('Could not delete task — please try again.');
     }
@@ -239,6 +280,15 @@ export default function App() {
   const todayTotal = todayTasks.length;
   const progress   = todayTotal > 0 ? (todayDone / todayTotal) * 100 : 0;
   const historyBadge = historyTasks.length > 99 ? '99+' : historyTasks.length;
+  // Pulse the done counter when a task is ticked off (not on first load)
+  const [lastDone, setLastDone] = useState(null);
+  const [badgePulse, setBadgePulse] = useState(0);
+  if (!loading && todayDone !== lastDone) {
+    if (lastDone !== null && todayDone > lastDone) setBadgePulse(n => n + 1);
+    setLastDone(todayDone);
+  }
+  // Only one element may own a given view-transition-name at a time
+  const editingId = editingTask?.id ?? null;
 
   return (
     <div className="app">
@@ -248,14 +298,14 @@ export default function App() {
           <button className="error-dismiss" onClick={() => setError(null)} aria-label="Dismiss">✕</button>
         </div>
       )}
-      <header className="header">
+      <header className="header" style={{ viewTransitionName: 'app-header' }}>
         <div className="header-top">
           <div>
             <h1 className="header-title">DIY Today</h1>
             <p className="header-date">{formatDate(today)}</p>
           </div>
           {todayTotal > 0 && view === 'main' && (
-            <span className="header-badge">{todayDone}/{todayTotal}</span>
+            <span key={badgePulse} className={`header-badge ${badgePulse ? 'header-badge--pulse' : ''}`}>{todayDone}/{todayTotal}</span>
           )}
         </div>
         {todayTotal > 0 && view === 'main' && (
@@ -263,47 +313,57 @@ export default function App() {
             <div className="progress-fill" style={{ width: `${progress}%` }} />
           </div>
         )}
-        <div className="view-tabs">
-          <button className={`view-tab ${view === 'main' ? 'view-tab--active' : ''}`} onClick={() => setView('main')}>Plan</button>
-          <button className={`view-tab ${view === 'history' ? 'view-tab--active' : ''}`} onClick={() => setView('history')}>
+        <div className="view-tabs" style={{ '--tab-index': view === 'history' ? 1 : 0 }}>
+          <span className={`view-tab-pill ${pillMoved ? 'view-tab-pill--moving' : ''}`} aria-hidden="true">
+            <span key={pillMoved} className="view-tab-pill-inner" />
+          </span>
+          <button className={`view-tab ${view === 'main' ? 'view-tab--active' : ''}`} onClick={() => switchView('main')}>Plan</button>
+          <button className={`view-tab ${view === 'history' ? 'view-tab--active' : ''}`} onClick={() => switchView('history')}>
             History {historyTasks.length > 0 && <span className="view-tab-count">{historyBadge}</span>}
           </button>
         </div>
       </header>
 
-      <main className="main">
+      <main className={`main ${stagger ? 'stagger' : ''}`}>
         {loading ? (
           <p className="loading-state">Loading…</p>
         ) : view === 'history' ? (
-          <HistorySection tasks={historyTasks} onToggle={toggleComplete} onEdit={setEditingTask} />
+          <HistorySection tasks={historyTasks} onToggle={toggleComplete} onEdit={openEdit} editingId={editingId} />
         ) : (
           <>
             <TodaySection
               tasks={todayTasks}
               onToggle={toggleComplete}
-              onEdit={setEditingTask}
+              onEdit={openEdit}
+              editingId={editingId}
               onRemove={removeFromToday}
               onReorder={reorderToday}
             />
             <BacklogSection
               tasks={backlogTasks}
               sort={backlogSort}
-              onSortChange={setBacklogSort}
-              onEdit={setEditingTask}
+              onSortChange={changeSort}
+              onEdit={openEdit}
+              editingId={editingId}
               onAddToToday={addToToday}
             />
           </>
         )}
       </main>
 
-      {undoToast && (
-        <div className="undo-toast" role="status">
-          <span className="undo-toast-text">"{undoToast.title}" done</span>
+      {toastMounted && shownToast && (
+        <div className={`undo-toast ${toastExiting ? 'undo-toast--exit' : ''}`} role="status">
+          <span className="undo-toast-text">"{shownToast.title}" done</span>
           <button className="undo-toast-btn" onClick={handleUndo}>Undo</button>
         </div>
       )}
 
-      <button className="fab" onClick={() => setShowForm(true)} aria-label="New task">
+      <button
+        className="fab"
+        onClick={openNew}
+        aria-label="New task"
+        style={{ viewTransitionName: showForm ? 'none' : 'task-new' }}
+      >
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
           <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
         </svg>
@@ -312,7 +372,8 @@ export default function App() {
       {showForm && (
         <TaskForm
           onSave={addTask}
-          onClose={() => setShowForm(false)}
+          onClose={closeNew}
+          viewTransitionName="task-new"
           categories={categories}
           onCategoryCreate={createCategory}
           onCategoryDelete={deleteCategory}
@@ -323,9 +384,10 @@ export default function App() {
           task={editingTask}
           onSave={data => updateTask(editingTask.id, data)}
           onDelete={() => deleteTask(editingTask.id)}
-          onAddToToday={() => { addToToday(editingTask.id); setEditingTask(null); }}
-          onRemoveFromToday={() => { removeFromToday(editingTask.id); setEditingTask(null); }}
-          onClose={() => setEditingTask(null)}
+          onAddToToday={() => addToToday(editingTask.id, { close: true })}
+          onRemoveFromToday={() => removeFromToday(editingTask.id, { close: true })}
+          onClose={closeEdit}
+          viewTransitionName={`task-${editingTask.id}`}
           onMaterialsChange={costs => updateTaskCosts(editingTask.id, costs)}
           isToday={editingTask.planned_date === today}
           categories={categories}
