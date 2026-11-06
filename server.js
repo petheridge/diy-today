@@ -5,7 +5,8 @@ const path = require('path');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
-const db = new Database(path.join(__dirname, 'diy-tasks.db'));
+const DB_PATH = process.env.DB_PATH || path.join(__dirname, 'diy-tasks.db');
+const db = new Database(DB_PATH);
 
 db.pragma('foreign_keys = ON');
 
