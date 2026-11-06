@@ -1,3 +1,4 @@
+import CheckIcon from './CheckIcon';
 import './HistorySection.css';
 
 const TIME_LABELS = ['', 'Quick', 'Half Day', 'Full Day', 'Weekend'];
@@ -32,18 +33,18 @@ function formatGroupDate(dateStr) {
   });
 }
 
-function HistoryTaskItem({ task, onToggle, onEdit }) {
+function HistoryTaskItem({ task, onToggle, onEdit, editingId, index }) {
   return (
-    <div className="history-card">
+    <div
+      className="history-card row-enter"
+      style={{ '--i': Math.min(index, 8), viewTransitionName: editingId === task.id ? 'none' : `task-${task.id}` }}
+    >
       <button
         className="history-check"
         onClick={() => onToggle(task.id, task.completed)}
         aria-label="Restore to backlog"
       >
-        <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-          <circle cx="11" cy="11" r="10" fill="var(--primary)" />
-          <polyline points="6,11 9.5,14.5 16,8" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-        </svg>
+        <CheckIcon checked={task.completed} />
       </button>
 
       <div className="history-card-body" onClick={() => onEdit(task)} role="button" aria-label={`Edit: ${task.title}`}>
@@ -72,7 +73,7 @@ function HistoryTaskItem({ task, onToggle, onEdit }) {
   );
 }
 
-export default function HistorySection({ tasks, onToggle, onEdit }) {
+export default function HistorySection({ tasks, onToggle, onEdit, editingId }) {
   if (tasks.length === 0) {
     return (
       <section className="history-section">
@@ -98,6 +99,7 @@ export default function HistorySection({ tasks, onToggle, onEdit }) {
     return b.localeCompare(a);
   });
 
+  let row = 0; // running index so the stagger flows across date groups
   return (
     <section className="history-section">
       {sortedKeys.map(dateKey => (
@@ -105,7 +107,7 @@ export default function HistorySection({ tasks, onToggle, onEdit }) {
           <p className="history-group-header">{formatGroupDate(dateKey)}</p>
           <div className="history-list">
             {byDate.get(dateKey).map(task => (
-              <HistoryTaskItem key={task.id} task={task} onToggle={onToggle} onEdit={onEdit} />
+              <HistoryTaskItem key={task.id} task={task} onToggle={onToggle} onEdit={onEdit} editingId={editingId} index={row++} />
             ))}
           </div>
         </div>

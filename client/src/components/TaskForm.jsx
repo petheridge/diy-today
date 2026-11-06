@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { MaterialsSection, ToolsSection } from './TaskFormParts';
+import { usePresence, exitMs, DUR } from '../motion';
 import './AddTaskForm.css';
 import './EditTaskForm.css';
 import './TaskPage.css';
@@ -39,7 +40,7 @@ function CloseIcon() {
   );
 }
 
-export default function TaskForm({ task, onSave, onDelete, onClose, onAddToToday, onRemoveFromToday, onMaterialsChange, isToday, categories = [], onCategoryCreate, onCategoryDelete }) {
+export default function TaskForm({ task, onSave, onDelete, onClose, onAddToToday, onRemoveFromToday, onMaterialsChange, isToday, categories = [], onCategoryCreate, onCategoryDelete, viewTransitionName }) {
   const isEdit = !!task;
 
   const [title, setTitle]           = useState(task?.title ?? '');
@@ -60,6 +61,7 @@ export default function TaskForm({ task, onSave, onDelete, onClose, onAddToToday
   const [showAddTool, setShowAddTool]         = useState(false);
 
   const dropdownRef = useRef(null);
+  const [dropdownMounted, dropdownExiting] = usePresence(showDropdown, exitMs(DUR.base));
 
   // Compute dirtiness from state directly — no ref needed
   const isDirty = isEdit && (
@@ -197,7 +199,7 @@ export default function TaskForm({ task, onSave, onDelete, onClose, onAddToToday
   const backLabel = isEdit ? (isDirty ? 'Save' : 'Back') : 'Cancel';
 
   return (
-    <div className="task-page">
+    <div className="task-page" style={{ viewTransitionName }}>
       <header className="page-header">
         <button
           className={`btn-page-back ${isEdit && isDirty ? 'btn-page-back--save' : ''}`}
@@ -280,12 +282,12 @@ export default function TaskForm({ task, onSave, onDelete, onClose, onAddToToday
                 {categoryId ? (categories.find(c => c.id === categoryId)?.name ?? '') : 'No category'}
               </span>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
-                style={{ transform: showDropdown ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s', flexShrink: 0, color: 'var(--text-muted)' }}>
+                style={{ transform: showDropdown ? 'rotate(180deg)' : 'none', transition: 'transform var(--dur-base) var(--ease-in-out)', flexShrink: 0, color: 'var(--text-muted)' }}>
                 <polyline points="6 9 12 15 18 9" />
               </svg>
             </button>
-            {showDropdown && (
-              <div className="category-dropdown">
+            {dropdownMounted && (
+              <div className={`category-dropdown ${dropdownExiting ? 'category-dropdown--exit' : ''}`}>
                 <button type="button" className="category-option category-option--none"
                   onClick={() => { setCategoryId(null); setShowDropdown(false); }}>
                   <span>No category</span>

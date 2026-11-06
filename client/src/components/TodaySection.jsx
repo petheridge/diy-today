@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   DndContext, closestCenter,
   PointerSensor, TouchSensor,
@@ -8,6 +8,8 @@ import {
   SortableContext, verticalListSortingStrategy, useSortable,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import CheckIcon from './CheckIcon';
+import { withViewTransition } from '../motion';
 import './TodaySection.css';
 
 const TIME_LABELS = ['', 'Quick', 'Half Day', 'Full Day', 'Weekend'];
@@ -72,28 +74,38 @@ function GripIcon() {
   );
 }
 
-function TodayTaskItem({ task, onToggle, onEdit, onRemove, dragHandleProps, isDragging }) {
+// Let the tick + pulse play before the card leaves the active list
+const COMPLETE_DELAY = 320;
+
+function TodayTaskItem({ task, onToggle, onEdit, onRemove, dragHandleProps, isDragging, editingId, index }) {
+  const [ticking, setTicking] = useState(false);
+  const timer = useRef(null);
+  useEffect(() => () => clearTimeout(timer.current), []);
+
+  const handleToggle = () => {
+    if (task.completed) { onToggle(task.id, true); return; }
+    if (ticking) return;
+    setTicking(true);
+    timer.current = setTimeout(() => { setTicking(false); onToggle(task.id, false); }, COMPLETE_DELAY);
+  };
+
+  const checked = task.completed || ticking;
+
   return (
-    <div className={`today-card ${task.completed ? 'today-card--done' : ''} ${isDragging ? 'today-card--dragging' : ''}`}>
+    <div
+      className={`today-card row-enter ${task.completed ? 'today-card--done' : ''} ${isDragging ? 'today-card--dragging' : ''}`}
+      style={{ '--i': Math.min(index ?? 0, 8), viewTransitionName: editingId === task.id || isDragging ? 'none' : `task-${task.id}` }}
+    >
       <div className="drag-handle" {...dragHandleProps} aria-label="Drag to reorder">
         <GripIcon />
       </div>
 
       <button
         className="today-check"
-        onClick={() => onToggle(task.id, task.completed)}
+        onClick={handleToggle}
         aria-label={task.completed ? 'Mark incomplete' : 'Mark complete'}
       >
-        {task.completed ? (
-          <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-            <circle cx="11" cy="11" r="10" fill="var(--primary)" />
-            <polyline points="6,11 9.5,14.5 16,8" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-          </svg>
-        ) : (
-          <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-            <circle cx="11" cy="11" r="10" stroke="#D0CECA" strokeWidth="1.5" />
-          </svg>
-        )}
+        <CheckIcon checked={checked} />
       </button>
 
       <div className="today-card-body" onClick={() => onEdit(task)} role="button">
@@ -124,9 +136,14 @@ function TodayTaskItem({ task, onToggle, onEdit, onRemove, dragHandleProps, isDr
 }
 
 function SortableItem({ task, ...props }) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: task.id });
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: task.id,
+    // Neighbours glide aside with ease-in-out
+    transition: { duration: 200, easing: 'cubic-bezier(0.65, 0, 0.35, 1)' },
+  });
   return (
-    <div ref={setNodeRef} style={{ transform: CSS.Transform.toString(transform), transition }}>
+    // The held card tracks the finger 1:1 — no tween while dragging
+    <div ref={setNodeRef} style={{ transform: CSS.Transform.toString(transform), transition: isDragging ? 'none' : transition, position: 'relative', zIndex: isDragging ? 2 : undefined }}>
       <TodayTaskItem
         task={task}
         isDragging={isDragging}
@@ -137,7 +154,7 @@ function SortableItem({ task, ...props }) {
   );
 }
 
-export default function TodaySection({ tasks, onToggle, onEdit, onRemove, onReorder }) {
+export default function TodaySection({ tasks, onToggle, onEdit, onRemove, onReorder, editingId }) {
   const active    = tasks.filter(t => !t.completed);
   const completed = tasks.filter(t =>  t.completed);
   const [showCompleted, setShowCompleted] = useState(false);
@@ -169,9 +186,9 @@ export default function TodaySection({ tasks, onToggle, onEdit, onRemove, onReor
         <div className="today-list">
           <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
             <SortableContext items={active.map(t => t.id)} strategy={verticalListSortingStrategy}>
-              {active.map(task => (
+              {active.map((task, i) => (
                 <SortableItem
-                  key={task.id} task={task}
+                  key={task.id} task={task} index={i} editingId={editingId}
                   onToggle={onToggle} onEdit={onEdit} onRemove={onRemove}
                 />
               ))}
@@ -182,21 +199,21 @@ export default function TodaySection({ tasks, onToggle, onEdit, onRemove, onReor
             <>
               <button
                 className="done-divider-toggle"
-                onClick={() => setShowCompleted(v => !v)}
+                onClick={() => withViewTransition(() => setShowCompleted(v => !v))}
                 aria-expanded={showCompleted}
               >
                 <span>Completed ({completed.length})</span>
                 <svg
                   width="14" height="14" viewBox="0 0 24 24" fill="none"
                   stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
-                  style={{ transform: showCompleted ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}
+                  style={{ transform: showCompleted ? 'rotate(180deg)' : 'none', transition: 'transform var(--dur-base) var(--ease-in-out)' }}
                 >
                   <polyline points="6 9 12 15 18 9" />
                 </svg>
               </button>
-              {showCompleted && completed.map(task => (
+              {showCompleted && completed.map((task, i) => (
                 <TodayTaskItem
-                  key={task.id} task={task}
+                  key={task.id} task={task} index={i} editingId={editingId}
                   onToggle={onToggle} onEdit={onEdit} onRemove={onRemove}
                   dragHandleProps={{}}
                 />

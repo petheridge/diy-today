@@ -75,7 +75,7 @@
   background: var(--bg);
   border-radius: 12px;
   padding: 10px 8px 10px 6px;
-  transition: opacity 0.2s, box-shadow 0.2s;
+  transition: transform var(--dur-fast) var(--ease-out), opacity var(--dur-base) var(--ease-out), box-shadow var(--dur-base) var(--ease-out);
 }
 
 .today-card--done {
