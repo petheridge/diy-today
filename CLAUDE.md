@@ -58,8 +58,6 @@ Two-process dev setup, single-process production:
 
 **Task ordering**: after any toggle or update the frontend re-sorts — incomplete first, completed last — without re-fetching from the server.
 
-**Motion**: timing/easing tokens live in `index.css` (`--ease-out`, `--ease-in-out`, `--ease-in`, `--dur-*`) and `motion.js` (`DUR`). Entrances use ease-out, on-screen moves ease-in-out, exits ease-in at ~80% of the entrance duration. State changes that move cards (open/close task page, add/remove from today, toggle, sort, view switch) go through `withViewTransition()` so a card and the task page sharing `view-transition-name: task-<id>` morph into each other — only one element may hold a given name at a time (hence `editingId`). `usePresence()` keeps the dropdown and undo toast mounted for their exit animation. `prefers-reduced-motion` disables all of it.
-
 ## Key design constraints
 
 - All touch targets are at least 44×44px.

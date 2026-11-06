@@ -451,24 +451,6 @@
   max-height: 260px;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-  /* Grow out of the trigger above it */
-  transform-origin: top center;
-  animation: popover-in var(--dur-base) var(--ease-out);
-}
-
-.category-dropdown--exit {
-  animation: popover-out var(--dur-exit-base) var(--ease-in) forwards;
-  pointer-events: none;
-}
-
-@keyframes popover-in {
-  from { opacity: 0; transform: translateY(-4px) scale(0.95); }
-  to   { opacity: 1; transform: none; }
-}
-
-@keyframes popover-out {
-  from { opacity: 1; transform: none; }
-  to   { opacity: 0; transform: translateY(-4px) scale(0.95); }
 }
 
 .category-dropdown > * {
@@ -611,7 +593,7 @@
   flex-direction: column;
   gap: 12px;
   align-items: center;
-  animation: popover-in var(--dur-base) var(--ease-out);
+  animation: fade-in 0.15s ease;
 }
 
 .delete-confirm-text {

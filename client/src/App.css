@@ -47,16 +47,6 @@
   text-align: center;
 }
 
-.header-badge--pulse {
-  animation: badge-pulse 320ms var(--ease-out);
-}
-
-@keyframes badge-pulse {
-  0%   { transform: scale(1); }
-  40%  { transform: scale(1.15); }
-  100% { transform: scale(1); }
-}
-
 .progress-track {
   height: 7px;
   background: rgba(255,255,255,0.15);
@@ -68,7 +58,7 @@
   height: 100%;
   background: var(--primary);
   border-radius: 4px;
-  transition: width var(--dur-slow) var(--ease-in-out);
+  transition: width 0.4s ease;
 }
 
 /* Main */
@@ -79,49 +69,13 @@
 
 /* View tab switcher */
 .view-tabs {
-  position: relative;
   display: flex;
   gap: 4px;
   margin-top: 12px;
-  --tab-index: 0;
-}
-
-/* The active pill is one element that slides between tabs (ease-in-out),
-   and stretches slightly while it travels */
-.view-tab-pill {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 0;
-  width: calc(50% - 2px);
-  border-radius: 8px;
-  transform: translateX(calc(var(--tab-index) * (100% + 4px)));
-  transition: transform var(--dur-slow) var(--ease-in-out);
-  pointer-events: none;
-}
-
-.view-tab-pill-inner {
-  width: 100%;
-  height: 100%;
-  border-radius: inherit;
-  /* stacks with the tab's own 0.12 to match the old 0.22 active fill */
-  background: rgba(255,255,255,0.12);
-}
-
-.view-tab-pill--moving .view-tab-pill-inner {
-  animation: pill-stretch var(--dur-slow) var(--ease-in-out);
-}
-
-@keyframes pill-stretch {
-  0%   { transform: scaleX(1); }
-  50%  { transform: scaleX(1.12); }
-  100% { transform: scaleX(1); }
 }
 
 .view-tab {
   flex: 1;
-  position: relative;
-  z-index: 1;
   background: rgba(255,255,255,0.12);
   border: none;
   border-radius: 8px;
@@ -136,10 +90,11 @@
   justify-content: center;
   gap: 6px;
   -webkit-tap-highlight-color: transparent;
-  transition: color var(--dur-slow) var(--ease-in-out), transform var(--dur-fast) var(--ease-out);
+  transition: background 0.15s, color 0.15s;
 }
 
 .view-tab--active {
+  background: rgba(255,255,255,0.22);
   color: white;
 }
 
@@ -204,13 +159,7 @@
   z-index: 30;
   white-space: nowrap;
   max-width: calc(100vw - 32px);
-  /* No overshoot — everyday UI shouldn't bounce */
-  animation: toast-in var(--dur-base) var(--ease-out);
-}
-
-.undo-toast--exit {
-  animation: toast-out var(--dur-exit-base) var(--ease-in) forwards;
-  pointer-events: none;
+  animation: toast-in 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .undo-toast-text {
@@ -239,11 +188,6 @@
   to   { opacity: 1; transform: translateX(-50%) translateY(0); }
 }
 
-@keyframes toast-out {
-  from { opacity: 1; transform: translateX(-50%) translateY(0); }
-  to   { opacity: 0; transform: translateX(-50%) translateY(8px); }
-}
-
 /* FAB */
 .fab {
   position: fixed;
@@ -260,12 +204,12 @@
   align-items: center;
   justify-content: center;
   box-shadow: 0 4px 16px rgba(224, 123, 57, 0.45);
-  transition: transform var(--dur-fast) var(--ease-out), box-shadow var(--dur-fast) var(--ease-out);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
   z-index: 20;
   -webkit-tap-highlight-color: transparent;
 }
 
 .fab:active {
-  transform: scale(var(--press-scale));
+  transform: scale(0.93);
   box-shadow: 0 2px 8px rgba(224, 123, 57, 0.35);
 }

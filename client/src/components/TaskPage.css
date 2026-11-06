@@ -4,32 +4,15 @@
   background: var(--bg);
   z-index: 50;
   overflow-y: auto;
-  overscroll-behavior: contain;
+  overscroll-behavior: none;
   -webkit-overflow-scrolling: touch;
-  /* Fallback entrance; browsers with View Transitions instead morph the
-     tapped card (or the + button) into this page — see App.jsx */
-  animation: page-enter var(--dur-base) var(--ease-out);
+  animation: page-enter 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
-html.has-vt .task-page { animation: none; }
 
 @keyframes page-enter {
   from { transform: translateX(32px); opacity: 0; }
   to   { transform: translateX(0);    opacity: 1; }
 }
-
-/* Details settle in one after another once the page has arrived */
-.page-body > * {
-  animation: row-enter var(--dur-slow) var(--ease-out) backwards;
-  animation-delay: calc(80ms + var(--i, 0) * 40ms);
-}
-.page-body > :nth-child(1) { --i: 0; }
-.page-body > :nth-child(2) { --i: 1; }
-.page-body > :nth-child(3) { --i: 2; }
-.page-body > :nth-child(4) { --i: 3; }
-.page-body > :nth-child(5) { --i: 4; }
-.page-body > :nth-child(6) { --i: 5; }
-.page-body > :nth-child(7) { --i: 6; }
-.page-body > :nth-child(n+8) { --i: 7; }
 
 .page-header {
   background: var(--header-bg);
@@ -87,7 +70,7 @@ html.has-vt .task-page { animation: none; }
   min-height: 44px;
   text-align: right;
   -webkit-tap-highlight-color: transparent;
-  transition: opacity var(--dur-fast) var(--ease-out), transform var(--dur-fast) var(--ease-out);
+  transition: opacity 0.15s;
 }
 
 .btn-page-action:disabled {

@@ -56,17 +56,13 @@ function TimeIcon({ rating }) {
   );
 }
 
-function BacklogTaskItem({ task, onEdit, onAddToToday, showCategoryBadge, editingId, index }) {
+function BacklogTaskItem({ task, onEdit, onAddToToday, showCategoryBadge }) {
   const priority = task.priority || 2;
 
   return (
     <div
-      className="backlog-card row-enter"
-      style={{
-        '--priority-color': PRIORITY_COLOR[priority],
-        '--i': Math.min(index, 8),
-        viewTransitionName: editingId === task.id ? 'none' : `task-${task.id}`,
-      }}
+      className="backlog-card"
+      style={{ '--priority-color': PRIORITY_COLOR[priority] }}
     >
       <div className="backlog-card-inner" onClick={() => onEdit(task)} role="button">
         <div className="backlog-card-top">
@@ -107,7 +103,7 @@ const SORT_OPTIONS = [
   { value: 'category', label: 'Category' },
 ];
 
-export default function BacklogSection({ tasks, sort, onSortChange, onEdit, onAddToToday, editingId }) {
+export default function BacklogSection({ tasks, sort, onSortChange, onEdit, onAddToToday }) {
   const isCategorySort = sort === 'category';
 
   const groups = isCategorySort ? (() => {
@@ -124,7 +120,6 @@ export default function BacklogSection({ tasks, sort, onSortChange, onEdit, onAd
     return [...named, ...uncategorised];
   })() : null;
 
-  let row = 0;
   return (
     <section className="backlog-section">
       <div className="backlog-header">
@@ -154,7 +149,7 @@ export default function BacklogSection({ tasks, sort, onSortChange, onEdit, onAd
               <p className="category-group-header">{groupName ?? 'Uncategorised'}</p>
               {groupTasks.map(task => (
                 <BacklogTaskItem
-                  key={task.id} editingId={editingId} index={row++}
+                  key={task.id}
                   task={task}
                   onEdit={onEdit}
                   onAddToToday={onAddToToday}
@@ -166,9 +161,9 @@ export default function BacklogSection({ tasks, sort, onSortChange, onEdit, onAd
         </div>
       ) : (
         <div className="backlog-list">
-          {tasks.map((task, i) => (
+          {tasks.map(task => (
             <BacklogTaskItem
-              key={task.id} editingId={editingId} index={i}
+              key={task.id}
               task={task}
               onEdit={onEdit}
               onAddToToday={onAddToToday}

@@ -13,7 +13,7 @@
 }
 
 .task-card:active {
-  transform: scale(var(--press-scale));
+  transform: scale(0.98);
 }
 
 .task-card--done {
