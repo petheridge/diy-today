@@ -1,0 +1,9 @@
+.git
+.github
+node_modules
+client/node_modules
+client/dist
+*.db
+*.sqlite
+.env
+.env.local

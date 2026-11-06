@@ -1,0 +1,11 @@
+services:
+  diy-today:
+    image: ghcr.io/petheridge/diy-today:latest
+    container_name: diy-today
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    environment:
+      TZ: Europe/London
+    volumes:
+      - ./data:/data

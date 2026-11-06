@@ -45,3 +45,15 @@ Tasks are organised into **today** and **backlog**. Each task can have:
 - Materials with costs (in GBP) and purchase links
 - Tools required
 - Category
+
+## Docker
+
+Every push to `main` builds `ghcr.io/petheridge/diy-today:latest` (plus a short-SHA tag) via GitHub Actions.
+
+```bash
+docker compose up -d   # uses docker-compose.yml in this repo
+```
+
+The SQLite database lives in `./data/diy-tasks.db` on the host (mounted at `/data`). The container runs as uid 1000, so the `data` folder must be writable by uid 1000. To move an existing install, stop the old app and copy its `diy-tasks.db` into `./data/` before starting the container.
+
+`DB_PATH` sets the database location (default: `diy-tasks.db` next to `server.js`, so non-Docker installs are unchanged).
